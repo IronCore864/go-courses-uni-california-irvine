@@ -8,29 +8,61 @@ import (
 )
 
 type Animal interface {
-	Eat()
-	Move()
-	Speak()
+	Eat() string
+	Move() string
+	Speak() string
 }
 
 type Cow struct{}
 type Bird struct{}
 type Snake struct{}
 
-func (cow *Cow) Eat()   { fmt.Println("grass") }
-func (cow *Cow) Move()  { fmt.Println("walk") }
-func (cow *Cow) Speak() { fmt.Println("moo") }
+func (cow *Cow) Eat() string   { return "grass" }
+func (cow *Cow) Move() string  { return "walk" }
+func (cow *Cow) Speak() string { return "moo" }
 
-func (bird *Bird) Eat()   { fmt.Println("worms") }
-func (bird *Bird) Move()  { fmt.Println("fly") }
-func (bird *Bird) Speak() { fmt.Println("peep") }
+func (bird *Bird) Eat() string   { return "worms" }
+func (bird *Bird) Move() string  { return "fly" }
+func (bird *Bird) Speak() string { return "peep" }
 
-func (snake *Snake) Eat()   { fmt.Println("mice") }
-func (snake *Snake) Move()  { fmt.Println("slither") }
-func (snake *Snake) Speak() { fmt.Println("hsss") }
+func (snake *Snake) Eat() string   { return "mice" }
+func (snake *Snake) Move() string  { return "slither" }
+func (snake *Snake) Speak() string { return "hsss" }
+
+var m = make(map[string]Animal)
+
+func addAnimal(name string, animalType string) {
+	animals := map[string]Animal{
+		"cow":   &Cow{},
+		"bird":  &Bird{},
+		"snake": &Snake{},
+	}
+	if _, ok := animals[animalType]; ok {
+		m[name] = animals[animalType]
+		fmt.Println("Created it!")
+	} else {
+		fmt.Println("Wrong type!")
+	}
+}
+
+func queryByName(name string, action string) {
+	funcs := map[string]func(Animal) string{
+		"eat":   (Animal).Eat,
+		"move":  (Animal).Move,
+		"speak": (Animal).Speak,
+	}
+	if _, ok := funcs[action]; ok {
+		fmt.Println(funcs[action](m[name]))
+	} else {
+		fmt.Println("Wrong action!")
+	}
+}
 
 func main() {
-	animals := make(map[string]Animal)
+	funcs := map[string]func(string, string){
+		"newanimal": addAnimal,
+		"query":     queryByName,
+	}
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("> Please input command.")
@@ -46,31 +78,18 @@ func main() {
 		fmt.Printf("> ")
 		input, _ := reader.ReadString('\n')
 		inputs := strings.Fields(input)
-
+		if len(inputs) < 3 {
+			fmt.Println("Wrong command!")
+			continue
+		}
 		cmd := inputs[0]
 		name := inputs[1]
 		action := inputs[2]
 
-		switch cmd {
-		case "newanimal":
-			switch action {
-			case "cow":
-				animals[name] = &Cow{}
-			case "bird":
-				animals[name] = &Bird{}
-			case "snake":
-				animals[name] = &Snake{}
-			}
-			fmt.Println("Created it!")
-		case "query":
-			switch action {
-			case "eat":
-				animals[name].Eat()
-			case "move":
-				animals[name].Move()
-			case "speak":
-				animals[name].Speak()
-			}
+		if _, ok := funcs[cmd]; ok {
+			funcs[cmd](name, action)
+		} else {
+			fmt.Println("Wrong command!")
 		}
 	}
 }
